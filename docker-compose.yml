@@ -1,0 +1,53 @@
+version: '3.8'
+
+services:
+  # MongoDB Database
+  mongodb:
+    image: mongo:7.0
+    container_name: chatapp-mongodb
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password123
+      MONGO_INITDB_DATABASE: chatapp
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+      - ./mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+    networks:
+      - chatapp-network
+
+  # Chat Application
+  chatapp:
+    build: .
+    container_name: chatapp-server
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 4000
+      MONGODB_URI: mongodb://admin:password123@mongodb:27017/chatapp?authSource=admin
+      JWT_SECRET: your-super-secure-jwt-secret-change-in-production
+      JWT_EXPIRES_IN: 7d
+      CLIENT_URL: http://localhost:4000
+      RATE_LIMIT_WINDOW_MS: 900000
+      RATE_LIMIT_MAX_REQUESTS: 100
+    ports:
+      - "4000:4000"
+    depends_on:
+      - mongodb
+    networks:
+      - chatapp-network
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:4000/api/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+volumes:
+  mongodb_data:
+
+networks:
+  chatapp-network:
+    driver: bridge

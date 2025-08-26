@@ -4,6 +4,7 @@ const socketIo = require('socket.io');
 const cors = require('cors');
 const mongoose = require('mongoose');
 const rateLimit = require('express-rate-limit');
+const path = require('path');
 require('dotenv').config();
 
 const authRoutes = require('./routes/auth');
@@ -46,10 +47,21 @@ app.use('/api/auth', authRoutes);
 app.use('/api/messages', messageRoutes);
 app.use('/api/users', userRoutes);
 
-// Health check
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'OK', timestamp: new Date().toISOString() });
-});
+// Serve static files in production
+if (process.env.NODE_ENV === 'production') {
+  // Serve static files from the React app build directory
+  app.use(express.static(path.join(__dirname, '../client/dist')));
+
+  // Handle React routing, return all requests to React app
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, '../client/dist', 'index.html'));
+  });
+} else {
+  // Health check for development
+  app.get('/api/health', (req, res) => {
+    res.json({ status: 'OK', timestamp: new Date().toISOString() });
+  });
+}
 
 // Socket.IO handling
 socketHandler(io);

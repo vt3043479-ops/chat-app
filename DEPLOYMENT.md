@@ -25,11 +25,24 @@
 
 ### Option 1: Local Production Build
 ```bash
-# 1. Build the application
+# 1. Install all dependencies first
+npm run install:all
+
+# 2. Build the application
 npm run build
 
-# 2. Start production server
+# 3. Start production server
 npm run start:prod
+```
+
+### Option 1b: Using Build Scripts (Recommended)
+```bash
+# Linux/Mac
+chmod +x build.sh
+./build.sh
+
+# Windows
+build.bat
 ```
 
 ### Option 2: Docker Deployment (Recommended)
@@ -155,10 +168,21 @@ npm run start:prod
 ## 🛠️ Troubleshooting
 
 ### Common Issues:
-1. **Port 4000 in use**: Change PORT environment variable
-2. **MongoDB connection**: Verify MONGODB_URI
-3. **Build failures**: Run `npm run install:all` first
-4. **CORS errors**: Check CLIENT_URL configuration
+1. **"vite: command not found" error**:
+   - Run `npm run install:all` first
+   - Or use the build scripts: `./build.sh` (Linux/Mac) or `build.bat` (Windows)
+   - Ensure Vite is in dependencies, not devDependencies
+
+2. **Port 4000 in use**: Change PORT environment variable
+
+3. **MongoDB connection**: Verify MONGODB_URI
+
+4. **Build failures**:
+   - Run `npm run install:all` first
+   - Clear node_modules: `rm -rf node_modules client/node_modules server/node_modules`
+   - Reinstall: `npm run install:all`
+
+5. **CORS errors**: Check CLIENT_URL configuration
 
 ### Debug Commands:
 ```bash

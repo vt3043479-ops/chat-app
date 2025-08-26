@@ -9,8 +9,10 @@ COPY package*.json ./
 COPY client/package*.json ./client/
 COPY server/package*.json ./server/
 
-# Install dependencies
-RUN npm run install:all
+# Install all dependencies (including devDependencies for build)
+RUN npm install
+RUN cd client && npm install
+RUN cd server && npm install
 
 # Copy source code
 COPY . .

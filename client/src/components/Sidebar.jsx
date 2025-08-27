@@ -3,10 +3,12 @@ import { useAuth } from '../contexts/AuthContext';
 import { useSocket } from '../contexts/SocketContext';
 import { Search, LogOut, Settings, User, UserPlus } from 'lucide-react';
 import FriendManager from './FriendManager';
+import QuickAddFriend from './QuickAddFriend';
 
 const Sidebar = ({ users, selectedUser, onUserSelect, onFriendsUpdate }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [showFriendManager, setShowFriendManager] = useState(false);
+  const [showQuickAdd, setShowQuickAdd] = useState(false);
   const { user, logout } = useAuth();
   const { onlineUsers } = useSocket();
 
@@ -90,9 +92,18 @@ const Sidebar = ({ users, selectedUser, onUserSelect, onFriendsUpdate }) => {
       {/* Modern Chat List */}
       <div className="flex-1 overflow-y-auto scrollbar-chat">
         <div className="p-4">
-          <h3 className="text-sm font-bold text-slate-700 px-2 py-3 mb-2">
-            Friends ({filteredUsers.length})
-          </h3>
+          <div className="flex items-center justify-between px-2 py-3 mb-2">
+            <h3 className="text-sm font-bold text-slate-700">
+              Friends ({filteredUsers.length})
+            </h3>
+            <button
+              onClick={() => setShowQuickAdd(true)}
+              className="p-1 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-all duration-200"
+              title="Quick Add Friends"
+            >
+              <UserPlus className="w-4 h-4" />
+            </button>
+          </div>
 
           {filteredUsers.length === 0 ? (
             <div className="text-center py-12 fade-in">
@@ -170,6 +181,13 @@ const Sidebar = ({ users, selectedUser, onUserSelect, onFriendsUpdate }) => {
         isOpen={showFriendManager}
         onClose={() => setShowFriendManager(false)}
         onFriendsUpdate={onFriendsUpdate}
+      />
+
+      {/* Quick Add Friend Modal */}
+      <QuickAddFriend
+        isOpen={showQuickAdd}
+        onClose={() => setShowQuickAdd(false)}
+        onFriendAdded={onFriendsUpdate}
       />
     </div>
   );

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Search, UserPlus, Check, X, Users, Clock, Send } from 'lucide-react';
+import { Search, UserPlus, Check, X, Users, Clock, Send, Trash2, UserMinus, Edit3 } from 'lucide-react';
 import axios from 'axios';
+import ConfirmDialog from './ConfirmDialog';
 
 const FriendManager = ({ isOpen, onClose }) => {
   const [activeTab, setActiveTab] = useState('search');
@@ -10,6 +11,10 @@ const FriendManager = ({ isOpen, onClose }) => {
   const [friendRequests, setFriendRequests] = useState([]);
   const [sentRequests, setSentRequests] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [editMode, setEditMode] = useState(false);
+  const [selectedFriends, setSelectedFriends] = useState(new Set());
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [friendToRemove, setFriendToRemove] = useState(null);
 
   useEffect(() => {
     if (isOpen) {
@@ -103,9 +108,70 @@ const FriendManager = ({ isOpen, onClose }) => {
     try {
       await axios.delete(`/api/friends/${friendId}`);
       fetchFriends();
+      // Remove from selected friends if it was selected
+      setSelectedFriends(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(friendId);
+        return newSet;
+      });
     } catch (error) {
       console.error('Error removing friend:', error);
     }
+  };
+
+  const removeMultipleFriends = async () => {
+    try {
+      const promises = Array.from(selectedFriends).map(friendId =>
+        axios.delete(`/api/friends/${friendId}`)
+      );
+      await Promise.all(promises);
+      fetchFriends();
+      setSelectedFriends(new Set());
+      setEditMode(false);
+    } catch (error) {
+      console.error('Error removing multiple friends:', error);
+    }
+  };
+
+  const handleRemoveFriend = (friendId, friendName) => {
+    setFriendToRemove({ id: friendId, name: friendName });
+    setShowConfirmDialog(true);
+  };
+
+  const confirmRemoveFriend = () => {
+    if (friendToRemove) {
+      removeFriend(friendToRemove.id);
+      setFriendToRemove(null);
+    }
+  };
+
+  const handleBulkRemove = () => {
+    setShowConfirmDialog(true);
+  };
+
+  const toggleFriendSelection = (friendId) => {
+    setSelectedFriends(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(friendId)) {
+        newSet.delete(friendId);
+      } else {
+        newSet.add(friendId);
+      }
+      return newSet;
+    });
+  };
+
+  const selectAllFriends = () => {
+    if (selectedFriends.size === friends.length) {
+      setSelectedFriends(new Set());
+    } else {
+      setSelectedFriends(new Set(friends.map(friend => friend._id)));
+    }
+  };
+
+  const cancelEdit = () => {
+    setEditMode(false);
+    setSelectedFriends(new Set());
   };
 
   const handleSearchChange = (e) => {
@@ -183,7 +249,11 @@ const FriendManager = ({ isOpen, onClose }) => {
             Search
           </button>
           <button
-            onClick={() => setActiveTab('friends')}
+            onClick={() => {
+              setActiveTab('friends');
+              setEditMode(false);
+              setSelectedFriends(new Set());
+            }}
             className={`flex-1 py-3 px-4 text-sm font-medium transition-colors ${
               activeTab === 'friends'
                 ? 'text-blue-600 border-b-2 border-blue-600'
@@ -257,34 +327,118 @@ const FriendManager = ({ isOpen, onClose }) => {
           )}
 
           {activeTab === 'friends' && (
-            <div className="space-y-3">
-              {friends.map((friend) => (
-                <div key={friend._id} className="flex items-center justify-between p-4 bg-slate-50 rounded-xl">
+            <div className="space-y-4">
+              {/* Edit Controls */}
+              {friends.length > 0 && (
+                <div className="flex items-center justify-between p-4 bg-blue-50 rounded-xl">
                   <div className="flex items-center space-x-3">
-                    <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-blue-600 rounded-full flex items-center justify-center text-white font-bold">
-                      {friend.avatar ? (
-                        <img src={friend.avatar} alt={friend.username} className="w-full h-full rounded-full object-cover" />
-                      ) : (
-                        getInitials(friend.username)
-                      )}
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-slate-800">{friend.username}</h3>
-                      <p className="text-sm text-slate-600">{friend.email}</p>
-                    </div>
+                    {editMode ? (
+                      <>
+                        <button
+                          onClick={selectAllFriends}
+                          className="px-3 py-1 bg-blue-500 hover:bg-blue-600 text-white rounded-full text-sm transition-colors"
+                        >
+                          {selectedFriends.size === friends.length ? 'Deselect All' : 'Select All'}
+                        </button>
+                        <span className="text-sm text-slate-600">
+                          {selectedFriends.size} selected
+                        </span>
+                      </>
+                    ) : (
+                      <span className="text-sm font-medium text-slate-700">
+                        Manage your friends
+                      </span>
+                    )}
                   </div>
-                  <button
-                    onClick={() => removeFriend(friend._id)}
-                    className="px-3 py-1 bg-red-100 hover:bg-red-200 text-red-600 rounded-full text-sm transition-colors"
-                  >
-                    Remove
-                  </button>
+                  <div className="flex items-center space-x-2">
+                    {editMode ? (
+                      <>
+                        {selectedFriends.size > 0 && (
+                          <button
+                            onClick={handleBulkRemove}
+                            className="px-3 py-1 bg-red-500 hover:bg-red-600 text-white rounded-full text-sm flex items-center space-x-1 transition-colors"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                            <span>Remove ({selectedFriends.size})</span>
+                          </button>
+                        )}
+                        <button
+                          onClick={cancelEdit}
+                          className="px-3 py-1 bg-slate-500 hover:bg-slate-600 text-white rounded-full text-sm transition-colors"
+                        >
+                          Cancel
+                        </button>
+                      </>
+                    ) : (
+                      <button
+                        onClick={() => setEditMode(true)}
+                        className="px-3 py-1 bg-blue-500 hover:bg-blue-600 text-white rounded-full text-sm flex items-center space-x-1 transition-colors"
+                      >
+                        <Edit3 className="w-4 h-4" />
+                        <span>Edit</span>
+                      </button>
+                    )}
+                  </div>
                 </div>
-              ))}
+              )}
+
+              {/* Friends List */}
+              <div className="space-y-3">
+                {friends.map((friend) => (
+                  <div
+                    key={friend._id}
+                    className={`flex items-center justify-between p-4 rounded-xl transition-all ${
+                      editMode
+                        ? selectedFriends.has(friend._id)
+                          ? 'bg-red-50 border-2 border-red-200'
+                          : 'bg-slate-50 hover:bg-slate-100 cursor-pointer'
+                        : 'bg-slate-50'
+                    }`}
+                    onClick={editMode ? () => toggleFriendSelection(friend._id) : undefined}
+                  >
+                    <div className="flex items-center space-x-3">
+                      {editMode && (
+                        <div className="flex items-center">
+                          <input
+                            type="checkbox"
+                            checked={selectedFriends.has(friend._id)}
+                            onChange={() => toggleFriendSelection(friend._id)}
+                            className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
+                          />
+                        </div>
+                      )}
+                      <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-blue-600 rounded-full flex items-center justify-center text-white font-bold">
+                        {friend.avatar ? (
+                          <img src={friend.avatar} alt={friend.username} className="w-full h-full rounded-full object-cover" />
+                        ) : (
+                          getInitials(friend.username)
+                        )}
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-slate-800">{friend.username}</h3>
+                        <p className="text-sm text-slate-600">{friend.email}</p>
+                      </div>
+                    </div>
+                    {!editMode && (
+                      <button
+                        onClick={() => handleRemoveFriend(friend._id, friend.username)}
+                        className="px-3 py-1 bg-red-100 hover:bg-red-200 text-red-600 rounded-full text-sm flex items-center space-x-1 transition-colors"
+                      >
+                        <UserMinus className="w-4 h-4" />
+                        <span>Remove</span>
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
 
               {friends.length === 0 && (
                 <div className="text-center py-8 text-slate-500">
-                  No friends yet. Search for users to add them!
+                  <div className="w-16 h-16 bg-gradient-to-br from-slate-200 to-slate-300 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Users className="w-8 h-8 text-slate-400" />
+                  </div>
+                  <p className="font-medium mb-2">No friends yet</p>
+                  <p className="text-sm">Search for users to add them as friends!</p>
                 </div>
               )}
             </div>
@@ -373,6 +527,25 @@ const FriendManager = ({ isOpen, onClose }) => {
           )}
         </div>
       </div>
+
+      {/* Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={showConfirmDialog}
+        onClose={() => {
+          setShowConfirmDialog(false);
+          setFriendToRemove(null);
+        }}
+        onConfirm={friendToRemove ? confirmRemoveFriend : removeMultipleFriends}
+        title={friendToRemove ? "Remove Friend" : "Remove Multiple Friends"}
+        message={
+          friendToRemove
+            ? `Are you sure you want to remove ${friendToRemove.name} from your friends list?`
+            : `Are you sure you want to remove ${selectedFriends.size} friend${selectedFriends.size > 1 ? 's' : ''} from your list?`
+        }
+        confirmText="Remove"
+        cancelText="Cancel"
+        type="danger"
+      />
     </div>
   );
 };

@@ -1,19 +1,25 @@
 const express = require('express');
 const User = require('../models/User');
+const Friend = require('../models/Friend');
 const authMiddleware = require('../middleware/auth');
 
 const router = express.Router();
 
-// Get all users (for chat list)
+// Get friends only (for chat list)
 router.get('/', authMiddleware, async (req, res) => {
   try {
-    const users = await User.find({ _id: { $ne: req.user._id } })
-      .select('username email avatar isOnline lastSeen')
-      .sort({ isOnline: -1, lastSeen: -1 });
+    const friends = await Friend.getFriends(req.user.id);
 
-    res.json({ users });
+    // Get detailed user info for friends with online status
+    const friendsWithDetails = await User.find({
+      _id: { $in: friends.map(friend => friend._id) }
+    })
+    .select('username email avatar isOnline lastSeen')
+    .sort({ isOnline: -1, lastSeen: -1 });
+
+    res.json({ users: friendsWithDetails });
   } catch (error) {
-    console.error('Get users error:', error);
+    console.error('Get friends error:', error);
     res.status(500).json({ error: 'Server error' });
   }
 });

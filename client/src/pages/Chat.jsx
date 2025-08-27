@@ -26,10 +26,14 @@ const Chat = () => {
       const response = await axios.get('/api/users');
       setUsers(response.data.users);
     } catch (error) {
-      console.error('Error fetching users:', error);
+      console.error('Error fetching friends:', error);
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleFriendsUpdate = () => {
+    fetchUsers(); // Refresh the friends list
   };
 
   const fetchMessages = async (userId) => {
@@ -70,6 +74,7 @@ const Chat = () => {
           users={users}
           selectedUser={selectedUser}
           onUserSelect={handleUserSelect}
+          onFriendsUpdate={handleFriendsUpdate}
         />
 
         {/* Main Chat Area */}
@@ -91,8 +96,8 @@ const Chat = () => {
                   </svg>
                 </div>
                 <h3 className="text-3xl font-bold text-slate-800 mb-4">Welcome to Friendship Fiesta</h3>
-                <p className="text-slate-600 font-medium text-lg mb-2">Your conversations live here</p>
-                <p className="text-slate-500">Select a friend from the sidebar to start chatting</p>
+                <p className="text-slate-600 font-medium text-lg mb-2">Connect with your friends</p>
+                <p className="text-slate-500">Add friends and select one to start chatting</p>
               </div>
             </div>
           )}

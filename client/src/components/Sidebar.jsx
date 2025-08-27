@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useSocket } from '../contexts/SocketContext';
-import { Search, LogOut, Settings, User } from 'lucide-react';
+import { Search, LogOut, Settings, User, UserPlus } from 'lucide-react';
+import FriendManager from './FriendManager';
 
-const Sidebar = ({ users, selectedUser, onUserSelect }) => {
+const Sidebar = ({ users, selectedUser, onUserSelect, onFriendsUpdate }) => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [showFriendManager, setShowFriendManager] = useState(false);
   const { user, logout } = useAuth();
   const { onlineUsers } = useSocket();
 
@@ -53,6 +55,13 @@ const Sidebar = ({ users, selectedUser, onUserSelect }) => {
             </div>
           </div>
           <div className="flex items-center space-x-2">
+            <button
+              onClick={() => setShowFriendManager(true)}
+              className="p-2 text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-all duration-200 hover-lift"
+              title="Manage Friends"
+            >
+              <UserPlus className="w-5 h-5" />
+            </button>
             <button className="p-2 text-slate-600 hover:text-slate-800 hover:bg-white/60 rounded-full transition-all duration-200 hover-lift">
               <Settings className="w-5 h-5" />
             </button>
@@ -82,7 +91,7 @@ const Sidebar = ({ users, selectedUser, onUserSelect }) => {
       <div className="flex-1 overflow-y-auto scrollbar-chat">
         <div className="p-4">
           <h3 className="text-sm font-bold text-slate-700 px-2 py-3 mb-2">
-            Messages ({filteredUsers.length})
+            Friends ({filteredUsers.length})
           </h3>
 
           {filteredUsers.length === 0 ? (
@@ -91,10 +100,10 @@ const Sidebar = ({ users, selectedUser, onUserSelect }) => {
                 <User className="w-8 h-8 text-slate-400" />
               </div>
               <p className="text-slate-500 font-medium">
-                {searchTerm ? 'No conversations found' : 'No conversations yet'}
+                {searchTerm ? 'No friends found' : 'No friends yet'}
               </p>
               <p className="text-slate-400 text-sm mt-1">
-                Start a new conversation to begin chatting
+                Add friends to start chatting
               </p>
             </div>
           ) : (
@@ -155,6 +164,13 @@ const Sidebar = ({ users, selectedUser, onUserSelect }) => {
           )}
         </div>
       </div>
+
+      {/* Friend Manager Modal */}
+      <FriendManager
+        isOpen={showFriendManager}
+        onClose={() => setShowFriendManager(false)}
+        onFriendsUpdate={onFriendsUpdate}
+      />
     </div>
   );
 };

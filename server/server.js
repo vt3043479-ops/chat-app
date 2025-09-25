@@ -89,6 +89,10 @@ if (process.env.NODE_ENV === 'production') {
 
   // Handle React routing, return all requests to React app
   app.get('*', (req, res) => {
+    // Skip API routes
+    if (req.path.startsWith('/api/') || req.path.startsWith('/socket.io/')) {
+      return res.status(404).json({ error: 'API endpoint not found' });
+    }
     res.sendFile(path.join(__dirname, '../client/dist', 'index.html'));
   });
 } else {

@@ -1,16 +1,12 @@
 {
   "version": 2,
-  "name": "chat-app",
-  "buildCommand": "npm run build",
+  "buildCommand": "cd client && npm install && npm run build",
   "outputDirectory": "client/dist",
-  "installCommand": "npm run install:all",
+  "installCommand": "npm install",
   "builds": [
     {
       "src": "server/server.js",
-      "use": "@vercel/node",
-      "config": {
-        "includeFiles": ["server/**"]
-      }
+      "use": "@vercel/node"
     }
   ],
   "routes": [
@@ -25,12 +21,6 @@
     {
       "src": "/uploads/(.*)",
       "dest": "/server/server.js"
-    },
-    {
-      "src": "/(.*\\.(js|css|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot))",
-      "headers": {
-        "Cache-Control": "public, max-age=31536000, immutable"
-      }
     },
     {
       "src": "/(.*)",

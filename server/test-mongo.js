@@ -3,8 +3,6 @@ const mongoose = require('mongoose');
 console.log('Testing MongoDB connection...');
 
 mongoose.connect('mongodb://127.0.0.1:27017/chat', {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
   serverSelectionTimeoutMS: 5000,
   family: 4
 })

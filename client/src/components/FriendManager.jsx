@@ -3,7 +3,7 @@ import { Search, UserPlus, Check, X, Users, Clock, Send, Trash2, UserMinus, Edit
 import axios from 'axios';
 import ConfirmDialog from './ConfirmDialog';
 
-const FriendManager = ({ isOpen, onClose }) => {
+const FriendManager = ({ isOpen, onClose, onFriendsUpdate }) => {
   const [activeTab, setActiveTab] = useState('search');
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
@@ -90,6 +90,10 @@ const FriendManager = ({ isOpen, onClose }) => {
       await axios.put(`/api/friends/accept/${requestId}`);
       fetchFriends();
       fetchFriendRequests();
+      // Notify parent component to refresh friends list
+      if (onFriendsUpdate) {
+        onFriendsUpdate();
+      }
     } catch (error) {
       console.error('Error accepting friend request:', error);
     }
@@ -114,6 +118,10 @@ const FriendManager = ({ isOpen, onClose }) => {
         newSet.delete(friendId);
         return newSet;
       });
+      // Notify parent component to refresh friends list
+      if (onFriendsUpdate) {
+        onFriendsUpdate();
+      }
     } catch (error) {
       console.error('Error removing friend:', error);
     }
@@ -128,6 +136,10 @@ const FriendManager = ({ isOpen, onClose }) => {
       fetchFriends();
       setSelectedFriends(new Set());
       setEditMode(false);
+      // Notify parent component to refresh friends list
+      if (onFriendsUpdate) {
+        onFriendsUpdate();
+      }
     } catch (error) {
       console.error('Error removing multiple friends:', error);
     }

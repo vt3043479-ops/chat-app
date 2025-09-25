@@ -12,7 +12,8 @@
     "build:server": "cd server && npm install --omit=dev",
     "start": "cd server && npm start",
     "start:prod": "cd server && NODE_ENV=production npm start",
-    "preview": "cd client && npm run preview"
+    "preview": "cd client && npm run preview",
+    "vercel-build": "npm run build"
   },
   "devDependencies": {
     "concurrently": "^8.2.2"

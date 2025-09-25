@@ -32,7 +32,7 @@ const ChatWindow = ({ selectedUser, messages }) => {
   useEffect(() => {
     // Mark messages as read when chat window opens
     if (selectedUser && messages.length > 0) {
-      markMessagesAsRead(selectedUser._id);
+      markMessagesAsRead(selectedUser._id || selectedUser.id);
     }
   }, [selectedUser, messages, markMessagesAsRead]);
 
@@ -44,7 +44,7 @@ const ChatWindow = ({ selectedUser, messages }) => {
     e.preventDefault();
     if (newMessage.trim() && selectedUser) {
       setLoading(true);
-      sendMessage(selectedUser._id, newMessage.trim(), null, 'text');
+      sendMessage(selectedUser._id || selectedUser.id, newMessage.trim(), null, 'text');
       setNewMessage('');
       handleStopTyping();
 
@@ -65,7 +65,7 @@ const ChatWindow = ({ selectedUser, messages }) => {
           mediaSize: media.size,
           mediaData: media
         };
-        sendMessage(selectedUser._id, media.name || '', mediaMessage, 'media');
+        sendMessage(selectedUser._id || selectedUser.id, media.name || '', mediaMessage, 'media');
       });
     }
     setShowMediaPicker(false);
@@ -81,7 +81,7 @@ const ChatWindow = ({ selectedUser, messages }) => {
         mediaUrl: item.url,
         mediaData: item
       };
-      sendMessage(selectedUser._id, item.title || 'GIF', gifMessage, 'media');
+      sendMessage(selectedUser._id || selectedUser.id, item.title || 'GIF', gifMessage, 'media');
     }
     setShowEmojiPicker(false);
   };
@@ -92,7 +92,7 @@ const ChatWindow = ({ selectedUser, messages }) => {
       mediaType: 'sticker',
       mediaData: sticker
     };
-    sendMessage(selectedUser._id, sticker.name || 'Sticker', stickerMessage, 'media');
+    sendMessage(selectedUser._id || selectedUser.id, sticker.name || 'Sticker', stickerMessage, 'media');
     setShowStickerPicker(false);
   };
 
@@ -101,7 +101,7 @@ const ChatWindow = ({ selectedUser, messages }) => {
     
     if (!isTyping) {
       setIsTyping(true);
-      startTyping(selectedUser._id);
+      startTyping(selectedUser._id || selectedUser.id);
     }
 
     // Clear existing timeout
@@ -118,7 +118,7 @@ const ChatWindow = ({ selectedUser, messages }) => {
   const handleStopTyping = () => {
     if (isTyping) {
       setIsTyping(false);
-      stopTyping(selectedUser._id);
+      stopTyping(selectedUser._id || selectedUser.id);
     }
     if (typingTimeoutRef.current) {
       clearTimeout(typingTimeoutRef.current);
@@ -126,11 +126,11 @@ const ChatWindow = ({ selectedUser, messages }) => {
   };
 
   const handleVoiceCall = () => {
-    startCall(selectedUser._id, 'voice');
+    startCall(selectedUser._id || selectedUser.id, 'voice');
   };
 
   const handleVideoCall = () => {
-    startCall(selectedUser._id, 'video');
+    startCall(selectedUser._id || selectedUser.id, 'video');
   };
 
   const handleMinimize = () => {
@@ -303,7 +303,7 @@ const ChatWindow = ({ selectedUser, messages }) => {
     });
   };
 
-  const isUserTyping = typingUsers.has(selectedUser._id);
+  const isUserTyping = typingUsers.has(selectedUser._id || selectedUser.id);
 
   return (
     <div className={`flex flex-col chat-container transition-all duration-300 ${

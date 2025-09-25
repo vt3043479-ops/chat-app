@@ -53,7 +53,7 @@ const Chat = () => {
     } else {
       // Show chat for new user
       setSelectedUser(clickedUser);
-      fetchMessages(clickedUser.id || clickedUser._id);
+      fetchMessages(clickedUser._id || clickedUser.id);
     }
   };
 
@@ -83,8 +83,8 @@ const Chat = () => {
             <ChatWindow
               selectedUser={selectedUser}
               messages={messages.filter(msg =>
-                (msg.sender._id === user.id && msg.recipient._id === selectedUser._id) ||
-                (msg.sender._id === selectedUser._id && msg.recipient._id === user.id)
+                (msg.sender._id === user.id && msg.recipient._id === (selectedUser._id || selectedUser.id)) ||
+                (msg.sender._id === (selectedUser._id || selectedUser.id) && msg.recipient._id === user.id)
               )}
             />
           ) : (

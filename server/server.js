@@ -38,10 +38,43 @@ const limiter = rateLimit({
 app.use(limiter);
 app.use(express.json());
 
-// MongoDB connection
-mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/chatapp')
-  .then(() => console.log('Connected to MongoDB'))
-  .catch(err => console.error('MongoDB connection error:', err));
+// Global error handler
+app.use((err, req, res, next) => {
+  console.error('Server error:', err);
+  res.status(500).json({ error: 'An unexpected error occurred' });
+});
+
+// MongoDB connection with debug logging
+console.log('Attempting to connect to MongoDB...');
+mongoose.set('strictQuery', true);
+
+// Connection options
+const mongoOptions = {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+  serverSelectionTimeoutMS: 5000, // Timeout after 5s instead of 30s
+  family: 4 // Use IPv4, skip trying IPv6
+};
+
+const mongoURI = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/chat';
+console.log('MongoDB URI:', mongoURI);
+
+mongoose.connect(mongoURI, mongoOptions)
+  .then(() => {
+    console.log('Connected to MongoDB successfully');
+    // Test the connection by listing databases
+    mongoose.connection.db.admin().listDatabases()
+      .then(result => {
+        console.log('Available databases:', result.databases.map(db => db.name));
+      })
+      .catch(err => {
+        console.error('Error listing databases:', err);
+      });
+  })
+  .catch(err => {
+    console.error('MongoDB connection error:', err);
+    process.exit(1); // Exit if cannot connect to database
+  });
 
 // Routes
 app.use('/api/auth', authRoutes);
